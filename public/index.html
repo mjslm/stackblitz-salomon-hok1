@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Honor of Kings Characters</title>
+
+    <style>
+      body {
+        font-family: Arial;
+        margin: 20px;
+        background: #f4f4f4;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .controls,
+      .form {
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      input {
+        padding: 8px;
+        margin: 5px;
+      }
+
+      button {
+        padding: 8px 12px;
+        margin: 5px;
+        cursor: pointer;
+      }
+
+      #list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+      }
+
+      .actions button {
+        margin-top: 5px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Honor of Kings Characters</h1>
+
+    <div class="controls">
+      <button onclick="loadCharacters()">Load All</button>
+      <button onclick="filterRole('Assassin')">Assassins</button>
+      <button onclick="filterRole('Mage')">Mages</button>
+      <button onclick="getRandom()">Random</button>
+    </div>
+
+    <div class="controls">
+      <input id="searchInput" placeholder="Search name" />
+      <button onclick="searchCharacter()">Search</button>
+    </div>
+
+    <div class="form">
+      <h3>Add Character</h3>
+      <input id="name" placeholder="Name" />  
+      <input id="role" placeholder="Role" />
+      <input id="difficulty" placeholder="Difficulty" />
+      <button onclick="addCharacter()">Add</button>
+    </div>
+
+    <div id="list"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
