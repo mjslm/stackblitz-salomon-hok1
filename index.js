@@ -1,93 +1,126 @@
-// LOAD ALL
-function loadCharacters() {
-  fetch('/characters')
-    .then((res) => res.json())
-    .then((data) => display(data));
-}
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
 
-// FILTER
-function filterRole(role) {
-  fetch(`/characters/role/${role}`)
-    .then((res) => res.json())
-    .then((data) => display(data));
-}
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-// SEARCH
-function searchCharacter() {
-  const value = document.getElementById('searchInput').value;
+app.use(cors());
+app.use(express.json());
 
-  fetch(`/search?name=${value}`)
-    .then((res) => res.json())
-    .then((data) => display(data));
-}
+// serve frontend
+app.use(express.static(path.join(__dirname, "public")));
 
-// RANDOM
-function getRandom() {
-  fetch('/random')
-    .then((res) => res.json())
-    .then((data) => display([data]));
-}
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
-// ADD
-function addCharacter() {
-  const name = document.getElementById('name').value;
-  const role = document.getElementById('role').value;
-  const difficulty = document.getElementById('difficulty').value;
+// ===== DATA =====
+let characters = [
+  { id: 1, name: "Li Bai", role: "Marksman", difficulty: "Easy" },
+  { id: 2, name: "Zhao Yun", role: "Fighter", difficulty: "Medium" },
+  { id: 3, name: "Arthur", role: "Tank", difficulty: "Easy" },
+  { id: 4, name: "Diao Chan", role: "Mage", difficulty: "Easy" },
+  { id: 5, name: "Sun Wukong", role: "Assassin", difficulty: "Hard" },
+];
+
+// GET all
+app.get("/characters", (req, res) => {
+  res.json(characters);
+});
+
+// GET by ID
+app.get("/characters/:id", (req, res) => {
+  const item = characters.find(c => c.id === Number(req.params.id));
+  if (!item) return res.status(404).json({ message: "Not found" });
+  res.json(item);
+});
+
+// POST
+app.post("/characters", (req, res) => {
+  const { name, role, difficulty } = req.body;
 
   if (!name || !role || !difficulty) {
-    alert('Fill all fields');
-    return;
+    return res.status(400).json({ message: "Missing fields" });
   }
 
-  fetch('/characters', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name, role, difficulty }),
-  })
-    .then((res) => res.json())
-    .then(() => {
-      loadCharacters();
-      clearInputs();
-    });
-}
+  const newChar = {
+    id: Date.now(),
+    name,
+    role,
+    difficulty
+  };
+
+  characters.push(newChar);
+  res.status(201).json(newChar);
+});
+
+// PUT
+app.put("/characters/:id", (req, res) => {
+  const item = characters.find(c => c.id === Number(req.params.id));
+  if (!item) return res.status(404).json({ message: "Not found" });
+
+  const { name, role, difficulty } = req.body;
+
+  if (name) item.name = name;
+  if (role) item.role = role;
+  if (difficulty) item.difficulty = difficulty;
+
+  res.json(item);
+});
 
 // DELETE
-function deleteCharacter(id) {
-  fetch(`/characters/${id}`, {
-    method: 'DELETE',
-  }).then(() => loadCharacters());
-}
+app.delete("/characters/:id", (req, res) => {
+  const index = characters.findIndex(c => c.id === Number(req.params.id));
+  if (index === -1) return res.status(404).json({ message: "Not found" });
 
-// DISPLAY
-function display(data) {
-  const list = document.getElementById('list');
-  list.innerHTML = '';
+  characters.splice(index, 1);
+  res.json({ message: "Deleted" });
+});
 
-  data.forEach((c) => {
-    const card = document.createElement('div');
-    card.className = 'card';
+// FILTER
+app.get("/characters/role/:role", (req, res) => {
+  res.json(
+    characters.filter(c =>
+      c.role.toLowerCase() === req.params.role.toLowerCase()
+    )
+  );
+});
 
-    card.innerHTML = `
-      <h3>${c.name}</h3>
-      <p><strong>Role:</strong> ${c.role}</p>
-      <p><strong>Difficulty:</strong> ${c.difficulty}</p>
-      <div class="actions">
-        <button onclick="deleteCharacter(${c.id})">Delete</button>
-      </div>
-    `;
+// SEARCH
+app.get("/search", (req, res) => {
+  const name = (req.query.name || "").toLowerCase();
+  res.json(
+    characters.filter(c =>
+      c.name.toLowerCase().includes(name)
+    )
+  );
+});
 
-    list.appendChild(card);
+// RANDOM
+app.get("/random", (req, res) => {
+  res.json(characters[Math.floor(Math.random() * characters.length)]);
+});
+
+// STATS
+app.get("/stats", (req, res) => {
+  const stats = {};
+  characters.forEach(c => {
+    stats[c.role] = (stats[c.role] || 0) + 1;
   });
-}
+  res.json(stats);
+});
 
-// CLEAR INPUTS
-function clearInputs() {
-  document.getElementById('name').value = '';
-  document.getElementById('role').value = '';
-  document.getElementById('difficulty').value = '';
-}
+// TOP
+app.get("/top-characters", (req, res) => {
+  res.json(characters.slice(0, 3));
+});
 
-// AUTO LOAD
-loadCharacters();
+// HEALTH
+app.get("/health", (req, res) => {
+  res.json({ status: "API running" });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
